@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sales Performance Dashboard — FY 2025</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #f3f6fa;
+      color: #1e293b;
+    }
+  </style>
+</head>
+<body class="min-h-screen">
+  <!-- Top Header -->
+  <header class="bg-[#1F497D] text-white shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-wrap items-center justify-between gap-3">
+      <div>
+        <h1 class="text-xl sm:text-2xl font-bold tracking-tight">Sales Performance Dashboard (FY 2025)</h1>
+        <p class="text-xs sm:text-sm text-blue-100 mt-0.5">Interactive analytics for Sales, Profit, Quantity &amp; Regional Performance</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <button id="pqInfoBtn" type="button" class="px-3 py-1.5 text-xs sm:text-sm font-medium bg-white/15 hover:bg-white/25 rounded-lg transition cursor-pointer">
+          Power Query Steps
+        </button>
+        <button id="resetBtn" type="button" class="px-3 py-1.5 text-xs sm:text-sm font-medium bg-white text-[#1F497D] hover:bg-blue-50 rounded-lg transition cursor-pointer">
+          Reset Filters
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 py-5 space-y-5">
+    <!-- Slicers Bar -->
+    <section class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end">
+        <div>
+          <label for="regionFilter" class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">Region</label>
+          <select id="regionFilter" class="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1F497D]">
+            <option value="ALL">All Regions</option>
+            <option value="North">North</option>
+            <option value="South">South</option>
+            <option value="East">East</option>
+            <option value="West">West</option>
+          </select>
+        </div>
+        <div>
+          <label for="categoryFilter" class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">Category</label>
+          <select id="categoryFilter" class="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1F497D]">
+            <option value="ALL">All Categories</option>
+            <option value="Technology">Technology</option>
+            <option value="Furniture">Furniture</option>
+            <option value="Office Supplies">Office Supplies</option>
+          </select>
+        </div>
+        <div>
+          <label for="quarterFilter" class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">Quarter</label>
+          <select id="quarterFilter" class="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1F497D]">
+            <option value="ALL">All Quarters (FY 2025)</option>
+            <option value="Q1">Q1 (Jan – Mar)</option>
+            <option value="Q2">Q2 (Apr – Jun)</option>
+            <option value="Q3">Q3 (Jul – Sep)</option>
+            <option value="Q4">Q4 (Oct – Dec)</option>
+          </select>
+        </div>
+        <div>
+          <label for="searchInput" class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">Search Product / State</label>
+          <input id="searchInput" type="text" placeholder="e.g., Laptop, Delhi..." class="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1F497D]" />
+        </div>
+      </div>
+    </section>
+
+    <!-- KPI Cards -->
+    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm border-l-4 border-l-[#1F497D]">
+        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Sales</p>
+        <p id="kpiSales" class="text-2xl font-bold text-slate-900 mt-1">₹0</p>
+        <p id="kpiOrders" class="text-xs text-slate-500 mt-1">0 orders</p>
+      </div>
+      <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm border-l-4 border-l-emerald-600">
+        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Profit</p>
+        <p id="kpiProfit" class="text-2xl font-bold text-emerald-700 mt-1">₹0</p>
+        <p class="text-xs text-slate-500 mt-1">Net operating profit</p>
+      </div>
+      <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm border-l-4 border-l-amber-500">
+        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Profit Margin</p>
+        <p id="kpiMargin" class="text-2xl font-bold text-slate-900 mt-1">0.0%</p>
+        <p class="text-xs text-slate-500 mt-1">Profit / Sales ratio</p>
+      </div>
+      <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm border-l-4 border-l-indigo-600">
+        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Quantity</p>
+        <p id="kpiQty" class="text-2xl font-bold text-slate-900 mt-1">0</p>
+        <p class="text-xs text-slate-500 mt-1">Units sold</p>
+      </div>
+    </section>
+
+    <!-- Charts Grid -->
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+        <h2 class="text-sm font-semibold text-slate-800 mb-3">Regional Performance — Sales &amp; Profit</h2>
+        <div class="relative h-72">
+          <canvas id="regionChart"></canvas>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+        <h2 class="text-sm font-semibold text-slate-800 mb-3">Monthly Sales &amp; Profit Trend (2025)</h2>
+        <div class="relative h-72">
+          <canvas id="monthlyChart"></canvas>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+        <h2 class="text-sm font-semibold text-slate-800 mb-3">Quantity Sold by Category</h2>
+        <div class="relative h-72">
+          <canvas id="categoryChart"></canvas>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+        <h2 class="text-sm font-semibold text-slate-800 mb-3">Sales by Sub-Category</h2>
+        <div class="relative h-72">
+          <canvas id="subCategoryChart"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- Transactions Table -->
+    <section class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+      <div class="px-4 py-3 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2">
+        <h2 class="text-sm font-semibold text-slate-800">Cleaned Sales Transactions</h2>
+        <span id="tableCount" class="text-xs text-slate-500">Showing 48 of 48 records</span>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse text-xs sm:text-sm">
+          <thead>
+            <tr class="bg-slate-50 text-slate-600 border-b border-slate-200">
+              <th class="py-2.5 px-3 font-semibold">Order ID</th>
+              <th class="py-2.5 px-3 font-semibold">Date</th>
+              <th class="py-2.5 px-3 font-semibold">Region</th>
+              <th class="py-2.5 px-3 font-semibold">State</th>
+              <th class="py-2.5 px-3 font-semibold">Category</th>
+              <th class="py-2.5 px-3 font-semibold">Product</th>
+              <th class="py-2.5 px-3 font-semibold text-right">Qty</th>
+              <th class="py-2.5 px-3 font-semibold text-right">Sales</th>
+              <th class="py-2.5 px-3 font-semibold text-right">Profit</th>
+              <th class="py-2.5 px-3 font-semibold text-right">Margin</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody" class="divide-y divide-slate-100"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- Power Query Modal -->
+  <div id="pqModal" class="hidden fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl max-w-lg w-full p-5 shadow-xl border border-slate-200">
+      <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+        <h3 class="text-base font-bold text-slate-900">Power Query Data Cleaning &amp; Transformation</h3>
+        <button id="closeModalBtn" type="button" class="text-slate-400 hover:text-slate-700 text-lg font-bold cursor-pointer">&times;</button>
+      </div>
+      <ul class="mt-3 space-y-2 text-sm text-slate-700 list-disc pl-5">
+        <li><strong>Data Type Standardization:</strong> Converted Order Date to Date, Quantity to Whole Number, and Unit Price/Cost/Sales/Profit to Currency.</li>
+        <li><strong>Text Cleaning:</strong> Applied Trim &amp; Clean on Region, State, Category, and Product Name columns.</li>
+        <li><strong>Derived Columns:</strong> Added <code>Sales = Quantity * Unit Price</code>, <code>Profit = Sales - Cost</code>, <code>Profit Margin = Profit / Sales</code>, and extracted <code>Month Num</code>.</li>
+        <li><strong>Data Validation:</strong> Verified zero null keys and duplicate-free Order IDs across 48 FY 2025 transactions.</li>
+      </ul>
+      <div class="mt-4 flex justify-end">
+        <button id="closeModalBtn2" type="button" class="px-4 py-2 text-sm font-medium bg-[#1F497D] text-white rounded-lg hover:bg-[#17375e] cursor-pointer">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const rawData = [
+      { id: "ORD-2025-001", date: "2025-01-05", month: 1, region: "North", state: "Delhi", cat: "Technology", sub: "Laptops", prod: "ProBook 14 Laptop", qty: 3, price: 52000, cost: 118000 },
+      { id: "ORD-2025-002", date: "2025-01-12", month: 1, region: "West", state: "Maharashtra", cat: "Furniture", sub: "Chairs", prod: "Ergonomic Mesh Chair", qty: 8, price: 8500, cost: 47600 },
+      { id: "ORD-2025-003", date: "2025-01-19", month: 1, region: "South", state: "Karnataka", cat: "Office Supplies", sub: "Binders", prod: "Heavy-Duty Ring Binder", qty: 25, price: 450, cost: 7200 },
+      { id: "ORD-2025-004", date: "2025-01-26", month: 1, region: "East", state: "West Bengal", cat: "Technology", sub: "Accessories", prod: "Wireless Mouse Pro", qty: 15, price: 1400, cost: 13650 },
+      { id: "ORD-2025-005", date: "2025-02-03", month: 2, region: "South", state: "Tamil Nadu", cat: "Technology", sub: "Smartphones", prod: "Enterprise 5G Phone", qty: 5, price: 32000, cost: 121600 },
+      { id: "ORD-2025-006", date: "2025-02-10", month: 2, region: "North", state: "Uttar Pradesh", cat: "Furniture", sub: "Tables", prod: "Conference Table 6-Seat", qty: 2, price: 24000, cost: 34560 },
+      { id: "ORD-2025-007", date: "2025-02-17", month: 2, region: "West", state: "Gujarat", cat: "Office Supplies", sub: "Paper", prod: "A4 Copier Paper Box", qty: 30, price: 950, cost: 19950 },
+      { id: "ORD-2025-008", date: "2025-02-24", month: 2, region: "East", state: "Bihar", cat: "Furniture", sub: "Bookcases", prod: "Steel 5-Shelf Bookcase", qty: 4, price: 11000, cost: 31680 },
+      { id: "ORD-2025-009", date: "2025-03-04", month: 3, region: "West", state: "Maharashtra", cat: "Technology", sub: "Laptops", prod: "UltraSlim 15 Laptop", qty: 4, price: 58000, cost: 176320 },
+      { id: "ORD-2025-010", date: "2025-03-11", month: 3, region: "South", state: "Karnataka", cat: "Furniture", sub: "Chairs", prod: "Executive Leather Chair", qty: 6, price: 12500, cost: 52500 },
+      { id: "ORD-2025-011", date: "2025-03-18", month: 3, region: "North", state: "Delhi", cat: "Office Supplies", sub: "Storage", prod: "Modular File Cabinet", qty: 10, price: 3200, cost: 22400 },
+      { id: "ORD-2025-012", date: "2025-03-25", month: 3, region: "East", state: "West Bengal", cat: "Technology", sub: "Accessories", prod: "USB-C Docking Station", qty: 12, price: 4200, cost: 34272 },
+      { id: "ORD-2025-013", date: "2025-04-06", month: 4, region: "North", state: "Delhi", cat: "Technology", sub: "Smartphones", prod: "Enterprise 5G Phone", qty: 6, price: 32000, cost: 145920 },
+      { id: "ORD-2025-014", date: "2025-04-14", month: 4, region: "West", state: "Gujarat", cat: "Furniture", sub: "Tables", prod: "Standing Work Desk", qty: 5, price: 16500, cost: 59400 },
+      { id: "ORD-2025-015", date: "2025-04-21", month: 4, region: "South", state: "Tamil Nadu", cat: "Office Supplies", sub: "Paper", prod: "A4 Copier Paper Box", qty: 40, price: 950, cost: 26600 },
+      { id: "ORD-2025-016", date: "2025-04-28", month: 4, region: "East", state: "Bihar", cat: "Office Supplies", sub: "Binders", prod: "Heavy-Duty Ring Binder", qty: 20, price: 450, cost: 5850 },
+      { id: "ORD-2025-017", date: "2025-05-05", month: 5, region: "South", state: "Karnataka", cat: "Technology", sub: "Laptops", prod: "ProBook 14 Laptop", qty: 5, price: 52000, cost: 197600 },
+      { id: "ORD-2025-018", date: "2025-05-13", month: 5, region: "West", state: "Maharashtra", cat: "Office Supplies", sub: "Storage", prod: "Modular File Cabinet", qty: 12, price: 3200, cost: 26880 },
+      { id: "ORD-2025-019", date: "2025-05-20", month: 5, region: "North", state: "Uttar Pradesh", cat: "Furniture", sub: "Chairs", prod: "Ergonomic Mesh Chair", qty: 10, price: 8500, cost: 59500 },
+      { id: "ORD-2025-020", date: "2025-05-27", month: 5, region: "East", state: "West Bengal", cat: "Technology", sub: "Smartphones", prod: "Business Lite Phone", qty: 4, price: 21000, cost: 63840 },
+      { id: "ORD-2025-021", date: "2025-06-03", month: 6, region: "West", state: "Maharashtra", cat: "Technology", sub: "Laptops", prod: "UltraSlim 15 Laptop", qty: 5, price: 58000, cost: 220400 },
+      { id: "ORD-2025-022", date: "2025-06-11", month: 6, region: "North", state: "Delhi", cat: "Furniture", sub: "Bookcases", prod: "Steel 5-Shelf Bookcase", qty: 6, price: 11000, cost: 47520 },
+      { id: "ORD-2025-023", date: "2025-06-19", month: 6, region: "South", state: "Karnataka", cat: "Technology", sub: "Accessories", prod: "Mechanical Keyboard", qty: 18, price: 2800, cost: 34272 },
+      { id: "ORD-2025-024", date: "2025-06-26", month: 6, region: "East", state: "Bihar", cat: "Office Supplies", sub: "Paper", prod: "A4 Copier Paper Box", qty: 25, price: 950, cost: 16625 },
+      { id: "ORD-2025-025", date: "2025-07-04", month: 7, region: "North", state: "Delhi", cat: "Technology", sub: "Laptops", prod: "ProBook 14 Laptop", qty: 4, price: 52000, cost: 158080 },
+      { id: "ORD-2025-026", date: "2025-07-12", month: 7, region: "South", state: "Tamil Nadu", cat: "Furniture", sub: "Tables", prod: "Conference Table 6-Seat", qty: 3, price: 24000, cost: 51840 },
+      { id: "ORD-2025-027", date: "2025-07-20", month: 7, region: "West", state: "Gujarat", cat: "Technology", sub: "Accessories", prod: "USB-C Docking Station", qty: 14, price: 4200, cost: 39984 },
+      { id: "ORD-2025-028", date: "2025-07-28", month: 7, region: "East", state: "West Bengal", cat: "Furniture", sub: "Chairs", prod: "Ergonomic Mesh Chair", qty: 7, price: 8500, cost: 41650 },
+      { id: "ORD-2025-029", date: "2025-08-05", month: 8, region: "West", state: "Maharashtra", cat: "Technology", sub: "Smartphones", prod: "Enterprise 5G Phone", qty: 7, price: 32000, cost: 170240 },
+      { id: "ORD-2025-030", date: "2025-08-13", month: 8, region: "South", state: "Karnataka", cat: "Office Supplies", sub: "Storage", prod: "Modular File Cabinet", qty: 15, price: 3200, cost: 33600 },
+      { id: "ORD-2025-031", date: "2025-08-21", month: 8, region: "North", state: "Uttar Pradesh", cat: "Office Supplies", sub: "Paper", prod: "A4 Copier Paper Box", qty: 35, price: 950, cost: 23275 },
+      { id: "ORD-2025-032", date: "2025-08-29", month: 8, region: "East", state: "Bihar", cat: "Technology", sub: "Accessories", prod: "Wireless Mouse Pro", qty: 20, price: 1400, cost: 18200 },
+      { id: "ORD-2025-033", date: "2025-09-04", month: 9, region: "South", state: "Karnataka", cat: "Technology", sub: "Laptops", prod: "UltraSlim 15 Laptop", qty: 6, price: 58000, cost: 264480 },
+      { id: "ORD-2025-034", date: "2025-09-12", month: 9, region: "North", state: "Delhi", cat: "Furniture", sub: "Chairs", prod: "Executive Leather Chair", qty: 8, price: 12500, cost: 70000 },
+      { id: "ORD-2025-035", date: "2025-09-19", month: 9, region: "West", state: "Maharashtra", cat: "Furniture", sub: "Tables", prod: "Standing Work Desk", qty: 6, price: 16500, cost: 71280 },
+      { id: "ORD-2025-036", date: "2025-09-27", month: 9, region: "East", state: "West Bengal", cat: "Office Supplies", sub: "Binders", prod: "Heavy-Duty Ring Binder", qty: 30, price: 450, cost: 8775 },
+      { id: "ORD-2025-037", date: "2025-10-05", month: 10, region: "West", state: "Maharashtra", cat: "Technology", sub: "Laptops", prod: "ProBook 14 Laptop", qty: 7, price: 52000, cost: 276640 },
+      { id: "ORD-2025-038", date: "2025-10-14", month: 10, region: "North", state: "Delhi", cat: "Technology", sub: "Accessories", prod: "Mechanical Keyboard", qty: 22, price: 2800, cost: 41888 },
+      { id: "ORD-2025-039", date: "2025-10-22", month: 10, region: "South", state: "Tamil Nadu", cat: "Furniture", sub: "Bookcases", prod: "Steel 5-Shelf Bookcase", qty: 5, price: 11000, cost: 39600 },
+      { id: "ORD-2025-040", date: "2025-10-29", month: 10, region: "East", state: "West Bengal", cat: "Office Supplies", sub: "Storage", prod: "Modular File Cabinet", qty: 9, price: 3200, cost: 20160 },
+      { id: "ORD-2025-041", date: "2025-11-06", month: 11, region: "North", state: "Delhi", cat: "Technology", sub: "Laptops", prod: "UltraSlim 15 Laptop", qty: 6, price: 58000, cost: 264480 },
+      { id: "ORD-2025-042", date: "2025-11-14", month: 11, region: "West", state: "Gujarat", cat: "Technology", sub: "Smartphones", prod: "Business Lite Phone", qty: 8, price: 21000, cost: 127680 },
+      { id: "ORD-2025-043", date: "2025-11-21", month: 11, region: "South", state: "Karnataka", cat: "Furniture", sub: "Chairs", prod: "Executive Leather Chair", qty: 9, price: 12500, cost: 78750 },
+      { id: "ORD-2025-044", date: "2025-11-28", month: 11, region: "East", state: "Bihar", cat: "Furniture", sub: "Tables", prod: "Standing Work Desk", qty: 4, price: 16500, cost: 47520 },
+      { id: "ORD-2025-045", date: "2025-12-04", month: 12, region: "West", state: "Maharashtra", cat: "Technology", sub: "Laptops", prod: "UltraSlim 15 Laptop", qty: 8, price: 58000, cost: 352640 },
+      { id: "ORD-2025-046", date: "2025-12-12", month: 12, region: "South", state: "Karnataka", cat: "Technology", sub: "Smartphones", prod: "Enterprise 5G Phone", qty: 9, price: 32000, cost: 218880 },
+      { id: "ORD-2025-047", date: "2025-12-19", month: 12, region: "North", state: "Delhi", cat: "Furniture", sub: "Chairs", prod: "Executive Leather Chair", qty: 10, price: 12500, cost: 87500 },
+      { id: "ORD-2025-048", date: "2025-12-26", month: 12, region: "East", state: "West Bengal", cat: "Office Supplies", sub: "Paper", prod: "A4 Copier Paper Box", qty: 45, price: 950, cost: 29925 }
+    ].map(r => {
+      const sales = r.qty * r.price;
+      const profit = sales - r.cost;
+      const quarter = r.month <= 3 ? "Q1" : r.month <= 6 ? "Q2" : r.month <= 9 ? "Q3" : "Q4";
+      return { ...r, sales, profit, margin: sales > 0 ? profit / sales : 0, quarter };
+    });
+
+    const fmtINR = n => "₹" + Math.round(n).toLocaleString("en-IN");
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const regions = ["North", "South", "East", "West"];
+    const categories = ["Technology", "Furniture", "Office Supplies"];
+
+    let regionChart, monthlyChart, categoryChart, subCategoryChart;
+
+    function initCharts() {
+      regionChart = new Chart(document.getElementById("regionChart"), {
+        type: "bar",
+        data: { labels: regions, datasets: [
+          { label: "Sales", data: [0,0,0,0], backgroundColor: "#1F497D", borderRadius: 4 },
+          { label: "Profit", data: [0,0,0,0], backgroundColor: "#10B981", borderRadius: 4 }
+        ]},
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: "bottom" } }, scales: { y: { beginAtZero: true } } }
+      });
+
+      monthlyChart = new Chart(document.getElementById("monthlyChart"), {
+        type: "line",
+        data: { labels: monthNames, datasets: [
+          { label: "Sales", data: Array(12).fill(0), borderColor: "#1F497D", backgroundColor: "rgba(31,73,125,0.1)", tension: 0.3, fill: true },
+          { label: "Profit", data: Array(12).fill(0), borderColor: "#10B981", backgroundColor: "rgba(16,185,129,0.08)", tension: 0.3, fill: true }
+        ]},
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: "bottom" } }, scales: { y: { beginAtZero: true } } }
+      });
+
+      categoryChart = new Chart(document.getElementById("categoryChart"), {
+        type: "doughnut",
+        data: { labels: categories, datasets: [
+          { label: "Quantity", data: [0,0,0], backgroundColor: ["#1F497D", "#F59E0B", "#10B981"] }
+        ]},
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: "bottom" } } }
+      });
+
+      subCategoryChart = new Chart(document.getElementById("subCategoryChart"), {
+        type: "bar",
+        data: { labels: [], datasets: [
+          { label: "Sales", data: [], backgroundColor: "#3B82F6", borderRadius: 4 }
+        ]},
+        options: { indexAxis: "y", responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true } } }
+      });
+    }
+
+    function updateDashboard() {
+      const reg = document.getElementById("regionFilter").value;
+      const cat = document.getElementById("categoryFilter").value;
+      const qtr = document.getElementById("quarterFilter").value;
+      const q = document.getElementById("searchInput").value.trim().toLowerCase();
+
+      const filtered = rawData.filter(r => {
+        if (reg !== "ALL" && r.region !== reg) return false;
+        if (cat !== "ALL" && r.cat !== cat) return false;
+        if (qtr !== "ALL" && r.quarter !== qtr) return false;
+        if (q && !(r.prod.toLowerCase().includes(q) || r.state.toLowerCase().includes(q) || r.sub.toLowerCase().includes(q))) return false;
+        return true;
+      });
+
+      const totalSales = filtered.reduce((s, r) => s + r.sales, 0);
+      const totalProfit = filtered.reduce((s, r) => s + r.profit, 0);
+      const totalQty = filtered.reduce((s, r) => s + r.qty, 0);
+      const margin = totalSales > 0 ? (totalProfit / totalSales) * 100 : 0;
+
+      document.getElementById("kpiSales").textContent = fmtINR(totalSales);
+      document.getElementById("kpiOrders").textContent = `${filtered.length} order${filtered.length === 1 ? "" : "s"}`;
+      document.getElementById("kpiProfit").textContent = fmtINR(totalProfit);
+      document.getElementById("kpiMargin").textContent = `${margin.toFixed(1)}%`;
+      document.getElementById("kpiQty").textContent = totalQty.toLocaleString("en-IN");
+
+      // Region Chart
+      regionChart.data.datasets[0].data = regions.map(rg => filtered.filter(r => r.region === rg).reduce((s, r) => s + r.sales, 0));
+      regionChart.data.datasets[1].data = regions.map(rg => filtered.filter(r => r.region === rg).reduce((s, r) => s + r.profit, 0));
+      regionChart.update();
+
+      // Monthly Chart
+      monthlyChart.data.datasets[0].data = monthNames.map((_, idx) => filtered.filter(r => r.month === idx + 1).reduce((s, r) => s + r.sales, 0));
+      monthlyChart.data.datasets[1].data = monthNames.map((_, idx) => filtered.filter(r => r.month === idx + 1).reduce((s, r) => s + r.profit, 0));
+      monthlyChart.update();
+
+      // Category Chart
+      categoryChart.data.datasets[0].data = categories.map(c => filtered.filter(r => r.cat === c).reduce((s, r) => s + r.qty, 0));
+      categoryChart.update();
+
+      // Sub-Category Chart
+      const subMap = {};
+      filtered.forEach(r => { subMap[r.sub] = (subMap[r.sub] || 0) + r.sales; });
+      const sortedSubs = Object.entries(subMap).sort((a, b) => b[1] - a[1]);
+      subCategoryChart.data.labels = sortedSubs.map(x => x[0]);
+      subCategoryChart.data.datasets[0].data = sortedSubs.map(x => x[1]);
+      subCategoryChart.update();
+
+      // Table
+      document.getElementById("tableCount").textContent = `Showing ${filtered.length} of ${rawData.length} records`;
+      const tbody = document.getElementById("tableBody");
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="10" class="py-6 text-center text-slate-500">No matching transactions found. Try clearing or adjusting your filters.</td></tr>`;
+      } else {
+        tbody.innerHTML = filtered.map(r => `
+          <tr class="hover:bg-slate-50">
+            <td class="py-2 px-3 font-medium text-slate-800 whitespace-nowrap">${r.id}</td>
+            <td class="py-2 px-3 text-slate-600 whitespace-nowrap">${r.date}</td>
+            <td class="py-2 px-3 text-slate-700">${r.region}</td>
+            <td class="py-2 px-3 text-slate-600">${r.state}</td>
+            <td class="py-2 px-3 text-slate-700">${r.cat}</td>
+            <td class="py-2 px-3 text-slate-800">${r.prod}</td>
+            <td class="py-2 px-3 text-right text-slate-700">${r.qty}</td>
+            <td class="py-2 px-3 text-right font-medium text-slate-900 whitespace-nowrap">${fmtINR(r.sales)}</td>
+            <td class="py-2 px-3 text-right font-medium text-emerald-700 whitespace-nowrap">${fmtINR(r.profit)}</td>
+            <td class="py-2 px-3 text-right text-slate-700">${(r.margin * 100).toFixed(1)}%</td>
+          </tr>
+        `).join("");
+      }
+    }
+
+    document.getElementById("regionFilter").addEventListener("change", updateDashboard);
+    document.getElementById("categoryFilter").addEventListener("change", updateDashboard);
+    document.getElementById("quarterFilter").addEventListener("change", updateDashboard);
+    document.getElementById("searchInput").addEventListener("input", updateDashboard);
+    document.getElementById("resetBtn").addEventListener("click", () => {
+      document.getElementById("regionFilter").value = "ALL";
+      document.getElementById("categoryFilter").value = "ALL";
+      document.getElementById("quarterFilter").value = "ALL";
+      document.getElementById("searchInput").value = "";
+      updateDashboard();
+    });
+
+    const pqModal = document.getElementById("pqModal");
+    document.getElementById("pqInfoBtn").addEventListener("click", () => pqModal.classList.remove("hidden"));
+    document.getElementById("closeModalBtn").addEventListener("click", () => pqModal.classList.add("hidden"));
+    document.getElementById("closeModalBtn2").addEventListener("click", () => pqModal.classList.add("hidden"));
+    pqModal.addEventListener("click", e => { if (e.target === pqModal) pqModal.classList.add("hidden"); });
+
+    initCharts();
+    updateDashboard();
+  </script>
+</body>
+</html>
